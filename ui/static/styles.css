@@ -13,6 +13,18 @@ body {
 	}
 }
 
+button {
+	background-color: #222;
+	padding: 0.2rem 0.3rem;
+	border: 1px solid #fff;
+	color: #fff;
+
+	&:hover {
+		cursor: pointer;
+		filter: invert();
+	}
+}
+
 input[type='text'],
 input[type='password'] {
 	background-color: #222;

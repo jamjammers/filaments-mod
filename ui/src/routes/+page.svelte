@@ -40,6 +40,12 @@
 		newPassphrase = localStorage.getItem('passphrase-verify') == null;
 	});
 
+	function clear() {
+		if (confirm('are you sure you want to clear everything?')) {
+			goto('clear');
+		}
+	}
+
 	function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 
@@ -99,7 +105,7 @@
 
 <div class="flex-col aic jcc gap-8 w100 h100">
 	<form class="fake-form" class:shown={filamentInput == undefined}>
-		<input type="text" placeholder="filament" bind:value={filamentInput} readonly />
+		<input type="text" placeholder="filament" bind:value={filamentInput} readonly tabindex="-1" />
 	</form>
 
 	<form class="fake-form" class:shown={filamentInput == undefined}>
@@ -109,13 +115,21 @@
 			bind:value={passphrase}
 			readonly
 			autocomplete="off"
+			tabindex="-1"
 		/>
 	</form>
+
+	<button tabindex="-1" on:click={clear}>clear</button>
 
 	<h1>filaments</h1>
 
 	<form id="domain-form" on:submit={handleSubmit}>
-		<input id="domain-input" type="text" placeholder="domain" bind:value={domainInput} />
+		<input
+			id="domain-input"
+			type="text"
+			placeholder="domain"
+			bind:value={domainInput}
+		/>
 	</form>
 
 	<form id="filament-form" class:shown={filamentInput !== undefined} on:submit={handleSubmit}>
@@ -123,8 +137,9 @@
 			id="filament-input"
 			type="text"
 			placeholder="filament"
-			bind:value={filamentInput}
 			readonly={filamentInput == undefined}
+			tabindex={filamentInput == undefined ? -1 : 0}
+			bind:value={filamentInput}
 		/>
 	</form>
 
@@ -133,9 +148,10 @@
 			id="passphrase-input"
 			type={filamentInput == undefined ? 'text' : 'password'}
 			placeholder="{newPassphrase ? 'new ' : ''}passphrase"
-			bind:value={passphrase}
 			readonly={filamentInput == undefined}
+			tabindex={filamentInput == undefined ? -1 : 0}
 			autocomplete={newPassphrase ? 'new-password' : 'current-password'}
+			bind:value={passphrase}
 		/>
 	</form>
 </div>

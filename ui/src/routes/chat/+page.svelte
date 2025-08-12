@@ -12,7 +12,7 @@
 	let key: string | undefined;
 	let encryptionKey: string | undefined;
 
-	let username = '<anonymous>';
+	let username = '';
 	let message = '';
 
 	let ws: WebSocket;
@@ -75,6 +75,14 @@
 			`${location.protocol.replace('http', 'ws')}//${serverHostname}/${domain}/${filament}`
 		);
 
+		const el = document.getElementById('messages');
+
+		ws.onopen = () => {
+			message = `<joined the chat>`;
+			send(undefined);
+			document.getElementById('message-input')?.focus();
+		};
+
 		ws.onmessage = (event) => {
 			const msg = AES.decrypt(event.data, encryptionKey!).toString(crypto.enc.Utf8);
 
@@ -85,7 +93,14 @@
 				return;
 			}
 
-			messages = [JSON.parse(msg) as Message, ...messages];
+			messages = [...messages, JSON.parse(msg) as Message];
+			if (messages.length > 100) {
+				messages = messages.slice(-100);
+			}
+			
+			setTimeout(() => {
+				el?.scrollTo(0, el.scrollHeight || document.body.scrollHeight);
+			}, 0);
 		};
 
 		ws.onclose = (event) => {
@@ -98,9 +113,15 @@
 		};
 	});
 
-	function send() {
+	function send(event: Event | undefined) {
+		event?.preventDefault();
+
+		if (!message){
+			return;
+		}
+
 		const msg: Message = {
-			user: username,
+			user: `<${username.trim() ? username.trim() : 'anonymous'}>`,
 			text: message
 		};
 
@@ -116,11 +137,71 @@
 		message = '';
 	}
 
-	$: if (browser) {
-		localStorage.setItem('username', username);
+	$: if (username) {
+		if (browser) {
+			localStorage.setItem('username', username);
+		}
 	}
 </script>
 
-{#each messages as message}
-	<p>{message.user}: {message.text}</p>
-{/each}
+<svelte:head>
+	<title>{domain || 'filaments'}/{filament || 'loading...'}</title>
+</svelte:head>
+
+<div id="container" class="flex-col">
+	<div id="messages-container">
+		<div id="messages">
+			{#each messages as message}
+				<p>{message.user}: {message.text}</p>
+			{/each}
+		</div>
+	</div>
+
+	<div id="inputs" class="flex gap-2">
+		<input
+			id="username-input"
+			type="text"
+			placeholder="username"
+			tabindex="-1"
+			bind:value={username}
+		/>
+		<form on:submit={send}>
+			<input id="message-input" type="text" placeholder="message" bind:value={message} />
+		</form>
+	</div>
+</div>
+
+<style>
+	#container {
+		width: 100vw;
+		height: 100vh;
+		overflow-y: hidden;
+
+		#messages-container {
+			overflow: auto;
+			flex: 1 1 auto;
+
+			#messages {
+				height: 100%;
+				overflow-y: auto;
+				padding-bottom: 0.4rem;
+			}
+		}
+
+		#inputs {
+			width: 100%;
+
+			#username-input {
+				width: min(20vw, 8rem);
+			}
+
+			form {
+				width: 100%;
+
+				#message-input {
+					width: 100%;
+				}
+			}
+		}
+	}
+</style>

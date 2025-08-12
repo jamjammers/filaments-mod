@@ -1,0 +1,59 @@
+body {
+	background-color: #000;
+	color: #fff;
+	font-family: monospace, sans-serif;
+	width: 100vw;
+	height: 100vh;
+
+	&,
+	* {
+		box-sizing: border-box;
+		margin: 0;
+		padding: 0;
+	}
+}
+
+input[type='text'],
+input[type='password'] {
+	background-color: #222;
+	padding: 0.2rem 0.3rem;
+	border: 1px solid #fff;
+	color: #fff;
+}
+
+.flex {
+	display: flex;
+}
+
+.flex-col {
+	display: flex;
+	flex-direction: column;
+}
+
+.aic {
+	align-items: center;
+}
+
+.jcc {
+	justify-content: center;
+}
+
+.gap-2 {
+	gap: 0.2rem;
+}
+
+.gap-4 {
+	gap: 0.4rem;
+}
+
+.gap-8 {
+	gap: 0.8rem;
+}
+
+.w100 {
+	width: 100%;
+}
+
+.h100 {
+	height: 100%;
+}

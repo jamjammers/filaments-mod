@@ -175,10 +175,11 @@
 			type="text"
 			placeholder="username"
 			tabindex="-1"
+			autocomplete="off"
 			bind:value={username}
 		/>
 		<form on:submit={send}>
-			<input id="message-input" type="text" placeholder="message" bind:value={message} />
+			<input id="message-input" type="text" placeholder="message" autocomplete="off" bind:value={message} />
 		</form>
 	</div>
 </div>

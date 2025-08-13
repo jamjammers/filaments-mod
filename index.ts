@@ -42,8 +42,15 @@ Bun.serve({
   },
 
   websocket: {
-    message(ws, msg) {
-      const block = JSON.parse(msg.toString()) as MessageBlock;
+    message(ws, data) {
+      const msg = data.toString();
+
+      if (msg == "ping") {
+        ws.send("pong");
+        return;
+      }
+
+      const block = JSON.parse(msg) as MessageBlock;
       const filament = block.filament;
       const message = block.message;
 

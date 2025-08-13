@@ -7,6 +7,7 @@
 	import { serverHost } from '$lib/host';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { reduceEachTrailingCommentRange } from 'typescript';
 
 	let domain: string | undefined;
 	let filament: string | undefined;
@@ -79,13 +80,23 @@
 		const el = document.getElementById('messages');
 
 		ws.onopen = () => {
+			setInterval(() => {
+				ws.send('ping');
+			}, 30000);
+
 			message = `<joined the chat>`;
 			send(undefined);
 			document.getElementById('message-input')?.focus();
 		};
 
 		ws.onmessage = (event) => {
-			const msg = AES.decrypt(event.data, encryptionKey!).toString(crypto.enc.Utf8);
+			const data = event.data;
+
+			if (data.toString() == 'pong') {
+				return;
+			}
+
+			const msg = AES.decrypt(data, encryptionKey!).toString(crypto.enc.Utf8);
 
 			if (!msg) {
 				localStorage.removeItem(`${domain}/${filament}`);

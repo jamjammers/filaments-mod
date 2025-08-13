@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { serverHostname } from '$lib';
+	import { serverHost } from '$lib/host';
 
 	import { onMount } from 'svelte';
 	import { goto, pushState } from '$app/navigation';
@@ -18,7 +18,7 @@
 	let passphrase = '';
 
 	onMount(() => {
-		serverUrl = location.protocol + '//' + serverHostname;
+		serverUrl = location.protocol + '//' + serverHost;
 
 		const params = new URLSearchParams(location.search);
 
@@ -124,12 +124,7 @@
 	<h1>filaments</h1>
 
 	<form id="domain-form" on:submit={handleSubmit}>
-		<input
-			id="domain-input"
-			type="text"
-			placeholder="domain"
-			bind:value={domainInput}
-		/>
+		<input id="domain-input" type="text" placeholder="domain" bind:value={domainInput} />
 	</form>
 
 	<form id="filament-form" class:shown={filamentInput !== undefined} on:submit={handleSubmit}>

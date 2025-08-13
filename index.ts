@@ -21,7 +21,7 @@ const CORS_HEADERS = {
 };
 
 serve({
-  port: 8443,
+  port: 2428,
 
   routes: {
     "/status": new Response("OK", CORS_HEADERS),

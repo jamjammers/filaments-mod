@@ -3,7 +3,8 @@
 	const { AES, SHA256 } = crypto;
 
 	import { goto } from '$app/navigation';
-	import { serverHostname, type Message, type MessageBlock } from '$lib';
+	import { type Message, type MessageBlock } from '$lib';
+	import { serverHost } from '$lib/host';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 
@@ -72,7 +73,7 @@
 		}
 
 		ws = new WebSocket(
-			`${location.protocol.replace('http', 'ws')}//${serverHostname}/${domain}/${filament}`
+			`${location.protocol.replace('http', 'ws')}//${serverHost}/${domain}/${filament}`
 		);
 
 		const el = document.getElementById('messages');
@@ -97,7 +98,7 @@
 			if (messages.length > 100) {
 				messages = messages.slice(-100);
 			}
-			
+
 			setTimeout(() => {
 				el?.scrollTo(0, el.scrollHeight || document.body.scrollHeight);
 			}, 0);
@@ -116,7 +117,7 @@
 	function send(event: Event | undefined) {
 		event?.preventDefault();
 
-		if (!message){
+		if (!message) {
 			return;
 		}
 

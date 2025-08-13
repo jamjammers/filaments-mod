@@ -6,12 +6,14 @@ on:
       - main
 jobs:
   build:
+    defaults:
+      run:
+        working-directory: ./ui
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
 
-      - run: cd ui
       - run: bun install
       - run: bun run build
       - name: Upload artifact

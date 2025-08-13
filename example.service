@@ -8,7 +8,7 @@ ExecStart=/usr/local/bin/filaments
 Restart=always
 RestartSec=5
 User=root
-WorkingDirectory=/var/lib/myservice
+WorkingDirectory=/var/lib/filaments
 StandardOutput=journal
 StandardError=journal
 

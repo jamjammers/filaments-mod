@@ -18,8 +18,10 @@ const CORS_HEADERS = {
   },
 };
 
+const port = Bun.env.PORT || 2428;
+
 Bun.serve({
-  port: 2428,
+  port: port,
 
   routes: {
     "/status": new Response("OK", CORS_HEADERS),
@@ -90,3 +92,5 @@ Bun.serve({
     return new Response("Not Found", { status: 404, ...CORS_HEADERS });
   },
 });
+
+console.log(`filaments server running on port ${port}.`);

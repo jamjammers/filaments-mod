@@ -43,3 +43,6 @@ vite.config.ts.timestamp-*
 
 # Cursor
 .cursor
+
+# filaments
+./filaments

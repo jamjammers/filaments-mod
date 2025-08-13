@@ -1,5 +1,3 @@
-import { serve } from "bun";
-
 let count = 0;
 
 interface Filament {
@@ -20,7 +18,7 @@ const CORS_HEADERS = {
   },
 };
 
-serve({
+Bun.serve({
   port: 2428,
 
   routes: {

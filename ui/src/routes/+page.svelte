@@ -20,6 +20,8 @@
 	onMount(() => {
 		serverUrl = location.protocol + '//' + serverHost;
 
+		newPassphrase = localStorage.getItem('passphrase-verify') == null;
+
 		const params = new URLSearchParams(location.search);
 
 		const domainParam = params.get('domain');
@@ -36,8 +38,6 @@
 			filamentInput = filamentParam;
 			document.getElementById('passphrase-input')?.focus();
 		}
-
-		newPassphrase = localStorage.getItem('passphrase-verify') == null;
 	});
 
 	function clear() {

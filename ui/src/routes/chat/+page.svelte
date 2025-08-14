@@ -113,7 +113,10 @@
 			}
 
 			if (document.visibilityState !== 'visible' && !mute) {
-				new Notification(`${message.user}@${domain}/${filament}`, { body: message.text });
+				new Notification(`${message.user}@${domain}/${filament}`, {
+					body: message.text,
+					icon: '/logo-256px.png'
+				});
 			}
 
 			setTimeout(() => {

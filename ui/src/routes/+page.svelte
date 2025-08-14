@@ -136,7 +136,7 @@
 		/>
 	</form>
 
-	<div class="flex gap-8">
+	<div class="flex gap-4">
 		<button tabindex="-1" on:click={clear}>clear</button>
 		<button tabindex="-1" on:click={requestNotificationPermissions}>notifications</button>
 	</div>

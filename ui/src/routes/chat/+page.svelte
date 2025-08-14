@@ -19,6 +19,9 @@
 	let ws: WebSocket;
 	let messages: Message[] = [];
 
+	let mute = false;
+	let notificationsPermitted = false;
+
 	function getCookie(name: string): string | undefined {
 		const value = `; ${document.cookie}`;
 		const parts = value.split(`; ${name}=`);
@@ -76,8 +79,6 @@
 			`${location.protocol.replace('http', 'ws')}//${serverHost}/${domain}/${filament}`
 		);
 
-		const el = document.getElementById('messages');
-
 		ws.onopen = () => {
 			setInterval(() => {
 				ws.send('ping');
@@ -88,6 +89,7 @@
 			document.getElementById('message-input')?.focus();
 		};
 
+		const messagesEl = document.getElementById('messages');
 		ws.onmessage = (event) => {
 			const data = event.data;
 
@@ -110,12 +112,12 @@
 				messages = messages.slice(-100);
 			}
 
-			if (document.visibilityState !== 'visible') {
-				new Notification(`${message.user} @ ${domain}/${filament}`, { body: message.text });
+			if (document.visibilityState !== 'visible' && !mute) {
+				new Notification(`${message.user}@${domain}/${filament}`, { body: message.text });
 			}
 
 			setTimeout(() => {
-				el?.scrollTo(0, el.scrollHeight || document.body.scrollHeight);
+				messagesEl?.scrollTo(0, messagesEl.scrollHeight || document.body.scrollHeight);
 			}, 0);
 		};
 
@@ -127,7 +129,24 @@
 			alert(reason);
 			goto(`/?${params.toString()}`);
 		};
+
+		notificationsPermitted = Notification.permission === 'granted';
 	});
+
+	function requestNotificationPermissions() {
+		if (Notification.permission === 'granted') {
+			alert('notification permissions granted.');
+		} else if (Notification.permission === 'denied') {
+			alert(
+				`notifications were denied. please update this setting in your browser settings for ${location.host}.`
+			);
+			return;
+		}
+
+		Notification.requestPermission().then((permission) => {
+			notificationsPermitted = permission === 'granted';
+		});
+	}
 
 	function send(event: Event | undefined) {
 		event?.preventDefault();
@@ -137,7 +156,7 @@
 		}
 
 		const msg: Message = {
-			user: `<${nick.trim() ? nick.trim() : 'anonymous'}>`,
+			user: `${nick.trim() ? nick.trim() : 'anonymous'}`,
 			text: message
 		};
 
@@ -168,7 +187,7 @@
 	<div id="messages-container">
 		<div id="messages">
 			{#each messages as message}
-				<p>{message.user}: {message.text}</p>
+				<p>&lt;{message.user}&gt;: {message.text}</p>
 			{/each}
 		</div>
 	</div>
@@ -182,6 +201,7 @@
 			autocomplete="off"
 			bind:value={nick}
 		/>
+
 		<form on:submit={send}>
 			<input
 				id="message-input"
@@ -191,6 +211,17 @@
 				bind:value={message}
 			/>
 		</form>
+
+		<div>|</div>
+
+		{#if notificationsPermitted}
+			<div class="flex aic gap-2">
+				<label for="mute-toggle">mute</label>
+				<input type="checkbox" id="mute-toggle" name="mute-toggle" bind:checked={mute} />
+			</div>
+		{:else}
+			<button tabindex="-1" on:click={requestNotificationPermissions}>notifications</button>
+		{/if}
 	</div>
 </div>
 

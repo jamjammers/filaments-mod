@@ -41,9 +41,26 @@
 	});
 
 	function clear() {
-		if (confirm('are you sure you want to clear everything?')) {
+		if (
+			confirm(
+				'are you sure you want to clear everything? this will delete your passphrase and stored encryption keys.'
+			)
+		) {
 			goto('clear');
 		}
+	}
+
+	function requestNotificationPermissions() {
+		if (Notification.permission === 'granted') {
+			alert('notification permissions granted.');
+		} else if (Notification.permission === 'denied') {
+			alert(
+				`notifications were denied. please update this setting in your browser settings for ${location.host}.`
+			);
+			return;
+		}
+
+		Notification.requestPermission();
 	}
 
 	function handleSubmit(event: SubmitEvent) {
@@ -119,7 +136,10 @@
 		/>
 	</form>
 
-	<button tabindex="-1" on:click={clear}>clear</button>
+	<div class="flex gap-8">
+		<button tabindex="-1" on:click={clear}>clear</button>
+		<button tabindex="-1" on:click={requestNotificationPermissions}>notifications</button>
+	</div>
 
 	<h1>filaments</h1>
 

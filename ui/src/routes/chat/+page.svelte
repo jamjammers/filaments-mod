@@ -7,14 +7,13 @@
 	import { serverHost } from '$lib/host';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
-	import { reduceEachTrailingCommentRange } from 'typescript';
 
 	let domain: string | undefined;
 	let filament: string | undefined;
 	let key: string | undefined;
 	let encryptionKey: string | undefined;
 
-	let username = '';
+	let nick = '';
 	let message = '';
 
 	let ws: WebSocket;
@@ -68,9 +67,9 @@
 		encryptionKey = AES.decrypt(encryptedEncryptionKey, key).toString(crypto.enc.Utf8);
 		key = undefined;
 
-		const storedUsername = localStorage.getItem('username');
-		if (storedUsername != null) {
-			username = storedUsername;
+		const storednick = localStorage.getItem('nick');
+		if (storednick != null) {
+			nick = storednick;
 		}
 
 		ws = new WebSocket(
@@ -105,9 +104,14 @@
 				return;
 			}
 
-			messages = [...messages, JSON.parse(msg) as Message];
+			const message = JSON.parse(msg) as Message;
+			messages = [...messages, message];
 			if (messages.length > 100) {
 				messages = messages.slice(-100);
+			}
+
+			if (document.visibilityState !== 'visible') {
+				new Notification(`${message.user} @ ${domain}/${filament}`, { body: message.text });
 			}
 
 			setTimeout(() => {
@@ -133,7 +137,7 @@
 		}
 
 		const msg: Message = {
-			user: `<${username.trim() ? username.trim() : 'anonymous'}>`,
+			user: `<${nick.trim() ? nick.trim() : 'anonymous'}>`,
 			text: message
 		};
 
@@ -149,9 +153,9 @@
 		message = '';
 	}
 
-	$: if (username) {
+	$: if (nick) {
 		if (browser) {
-			localStorage.setItem('username', username);
+			localStorage.setItem('nick', nick);
 		}
 	}
 </script>
@@ -171,15 +175,21 @@
 
 	<div id="inputs" class="flex gap-2">
 		<input
-			id="username-input"
+			id="nick-input"
 			type="text"
-			placeholder="username"
+			placeholder="nick"
 			tabindex="-1"
 			autocomplete="off"
-			bind:value={username}
+			bind:value={nick}
 		/>
 		<form on:submit={send}>
-			<input id="message-input" type="text" placeholder="message" autocomplete="off" bind:value={message} />
+			<input
+				id="message-input"
+				type="text"
+				placeholder="message"
+				autocomplete="off"
+				bind:value={message}
+			/>
 		</form>
 	</div>
 </div>
@@ -204,7 +214,7 @@
 		#inputs {
 			width: 100%;
 
-			#username-input {
+			#nick-input {
 				width: min(20vw, 8rem);
 			}
 

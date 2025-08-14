@@ -192,7 +192,7 @@
 		</div>
 	</div>
 
-	<div id="inputs" class="flex gap-2">
+	<div id="inputs" class="flex aic gap-2">
 		<input
 			id="nick-input"
 			type="text"
@@ -215,10 +215,8 @@
 		<div>|</div>
 
 		{#if notificationsPermitted}
-			<div class="flex aic gap-2">
-				<label for="mute-toggle">mute</label>
-				<input type="checkbox" id="mute-toggle" name="mute-toggle" bind:checked={mute} />
-			</div>
+			<label for="mute-toggle">mute</label>
+			<input type="checkbox" id="mute-toggle" name="mute-toggle" bind:checked={mute} />
 		{:else}
 			<button tabindex="-1" on:click={requestNotificationPermissions}>notifications</button>
 		{/if}

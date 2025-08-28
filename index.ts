@@ -33,7 +33,7 @@ Bun.serve({
   port: port,
 
   routes: {
-    "/status": new Response("OK", CORS_HEADERS),
+    "/status": (req) => new Response("OK", getHeaders(req.headers.get("origin")?.toString())),
 
     "/:domain/:filament": (req, server) => {
       if (

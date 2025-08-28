@@ -119,7 +119,7 @@
 <head>
 	<title>filaments</title>
 </head>
-
+drunk
 <div class="flex-col aic jcc gap-8 w100 h100">
 	<form class="fake-form" class:shown={filamentInput == undefined}>
 		<input type="text" placeholder="filament" bind:value={filamentInput} readonly tabindex="-1" />

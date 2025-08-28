@@ -3,6 +3,7 @@ let count = 0;
 interface Filament {
   domain: string;
   name: string;
+  uid?: string;
 }
 
 interface MessageBlock {
@@ -10,13 +11,21 @@ interface MessageBlock {
   message: string;
 }
 
-const CORS_HEADERS = {
-  headers: {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "OPTIONS, POST",
-    "Access-Control-Allow-Headers": "Content-Type",
-  },
-};
+const ALLOWED_ORIGINS = [
+  "app.filaments.chat",
+];
+
+function getHeaders(origin?: string) {
+  const allowedOrigin = (origin && ALLOWED_ORIGINS.includes(origin)) ? "" : ALLOWED_ORIGINS[0];
+  console.log(allowedOrigin)
+  return {
+    headers: {
+      "Access-Control-Allow-Origin": allowedOrigin,
+      "Access-Control-Allow-Methods": "OPTIONS, POST",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  };
+}
 
 const port = Bun.env.PORT || 2428;
 
@@ -34,6 +43,7 @@ Bun.serve({
             name: req.params.filament,
           } as Filament,
         })
+
       ) {
         return;
       }
@@ -74,7 +84,6 @@ Bun.serve({
           "0"
         )}  ${message.slice(0, 64)}`
       );
-
       ws.send(message);
       ws.publish(topic, message);
     },
@@ -93,10 +102,10 @@ Bun.serve({
 
   fetch(req) {
     if (req.method === "OPTIONS") {
-      return new Response("Departed", CORS_HEADERS);
+      return new Response("Departed", getHeaders(req.headers.get("origin")?.toString()));
     }
 
-    return new Response("Not Found", { status: 404, ...CORS_HEADERS });
+    return new Response("Not Found", { status: 404, ...getHeaders(req.headers.get("origin")?.toString()) });
   },
 });
 

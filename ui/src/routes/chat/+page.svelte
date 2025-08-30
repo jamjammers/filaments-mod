@@ -12,7 +12,6 @@
 	let filament: string | undefined;
 	let key: string | undefined;
 	let encryptionKey: string | undefined;
-
 	let nick = '';
 	let message = '';
 
@@ -21,6 +20,8 @@
 
 	let mute = false;
 	let notificationsPermitted = false;
+
+	let reconnectKey: string = '';
 
 	function getCookie(name: string): string | undefined {
 		const value = `; ${document.cookie}`;
@@ -40,9 +41,17 @@
 		document.cookie = `key=,expires=${new Date().toUTCString()};Max-Age=0`;
 
 		if (!domain || !filament || !key) {
-			goto(`/?${params.toString()}`);
-			return;
+			if (getCookie('reconnect_key') != undefined) {
+				reconnectKey = getCookie('reconnect_key')!;
+			} else {
+				alert('missing domain, filament, or encryption key');
+
+				goto(`/?${params.toString()}`);
+				return;
+			}
 		}
+		document.cookie = `reconnect_key=,expires=${new Date().toUTCString()};Max-Age=0`
+		localStorage.removeItem('reconnect_key');
 
 		const encryptedEncryptionKey = localStorage.getItem(`${domain}/${filament}`);
 
@@ -51,7 +60,7 @@
 				`enter the encryption passphrase for ${domain}/${filament}:`
 			);
 
-			if (encryptionPassphrase != null) {
+			if (encryptionPassphrase != null && key) {
 				localStorage.setItem(
 					`${domain}/${filament}`,
 					AES.encrypt(SHA256(encryptionPassphrase).toString(), key).toString()
@@ -66,8 +75,17 @@
 			location.reload();
 			return;
 		}
+		if(key)
+			encryptionKey = AES.decrypt(encryptedEncryptionKey, key).toString(crypto.enc.Utf8);
+		else if (getCookie("storedEncryptionKey") != undefined){
+			encryptionKey = getCookie("storedEncryptionKey")
+			document.cookie = `storedEncryptionKey=;expires=${new Date().toUTCString};Max-Age=0`
+		}
+		if (!encryptionKey) {
+			alert('missing encryption key');
+			return
+		}
 
-		encryptionKey = AES.decrypt(encryptedEncryptionKey, key).toString(crypto.enc.Utf8);
 		key = undefined;
 
 		const storednick = localStorage.getItem('nick');
@@ -94,6 +112,11 @@
 			const data = event.data;
 
 			if (data.toString() == 'pong') {
+				return;
+			}
+
+			if (data.toString().startsWith('.')) {
+				reconnectKey = data.toString().substring(1);
 				return;
 			}
 
@@ -127,13 +150,23 @@
 		ws.onclose = (event) => {
 			let reason = event.reason;
 			if (!reason) {
+
+				const now = new Date();
+				const time = now.getTime();
+				const expireTime = time + 10800000;
+				now.setTime(expireTime);
+				document.cookie = `reconnect_key=${reconnectKey};expires=${now.toUTCString};Max-Age=10800`;
+				document.cookie = `storedEncryptionKey=${encryptionKey};expires=${now.toUTCString};Max-Age=10800`
+
 				reason = 'WebSocket connection dropped unexpectedly.';
 			}
-			alert(reason);
-			goto(`/?${params.toString()}`);
+			// goto(`/?${params.toString()}&close=${reason}`);
 		};
 
 		notificationsPermitted = Notification.permission === 'granted';
+		window.addEventListener('beforeunload', (e) => {
+			ws.send('close');
+		});
 	});
 
 	function requestNotificationPermissions() {

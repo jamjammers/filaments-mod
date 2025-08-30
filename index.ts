@@ -3,12 +3,42 @@ let count = 0;
 interface Filament {
   domain: string;
   name: string;
-  uid?: string;
+  reconnectID?: string;
 }
 
 interface MessageBlock {
   filament: Filament;
   message: string;
+}
+
+const colors = {
+  Reset: "\x1b[0m",
+  Bright: "\x1b[1m",
+  Dim: "\x1b[2m",
+  Underscore: "\x1b[4m",
+  Blink: "\x1b[5m",
+  Reverse: "\x1b[7m",
+  Hidden: "\x1b[8m",
+
+  FgBlack: "\x1b[30m",
+  FgRed: "\x1b[31m",
+  FgGreen: "\x1b[32m",
+  FgYellow: "\x1b[33m",
+  FgBlue: "\x1b[34m",
+  FgMagenta: "\x1b[35m",
+  FgCyan: "\x1b[36m",
+  FgWhite: "\x1b[37m",
+  FgGray: "\x1b[90m",
+
+  BgBlack: "\x1b[40m",
+  BgRed: "\x1b[41m",
+  BgGreen: "\x1b[42m",
+  BgYellow: "\x1b[43m",
+  BgBlue: "\x1b[44m",
+  BgMagenta: "\x1b[45m",
+  BgCyan: "\x1b[46m",
+  BgWhite: "\x1b[47m",
+  BgGray: "\x1b[100m"
 }
 
 const ALLOWED_ORIGINS = [
@@ -26,6 +56,8 @@ function getHeaders(origin?: string) {
     },
   };
 }
+
+const messageQueues: Map<string, string[]> = new Map(); // Key: Hashed value, Value: Message queue
 
 const port = Bun.env.PORT || 2428;
 
@@ -79,7 +111,8 @@ Bun.serve({
       count++;
 
       console.log(
-        `${new Date().toISOString()}  ${String(count).padStart(
+        `${colors.FgGray}${new Date().toISOString()}${colors.Reset}  
+        ${String(count).padStart(
           6,
           "0"
         )}  ${message.slice(0, 64)}`
@@ -95,9 +128,23 @@ Bun.serve({
         return;
       }
 
+      console.log(`data: ${(ws.data as Filament)} ws: ${ws}`);
+
+      if((ws.data as Filament).reconnectID == undefined){
+        (ws.data as Filament).reconnectID = crypto.randomUUID();
+      }
+
       ws.subscribe(`${filament.domain}/${filament.name}`);
+      ws.send("." + (ws.data as Filament).reconnectID);
     },
-    close(ws, code, reason) {},
+
+    close(ws, code, reason) {
+      console.log(`${colors.BgBlue}code:${code} \nreason:${reason} \nws:${ws}${colors.Reset}}`);
+      if (code == 1006 && reason == "") {
+
+      }
+    },
+    idleTimeout: -1
   },
 
   fetch(req) {

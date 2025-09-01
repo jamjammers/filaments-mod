@@ -102,6 +102,7 @@
 			document.cookie = `key=${SHA256(passphrase).toString()};expires=${now.toUTCString()};Max-Age=30`;
 
 			goto(`chat?${params.toString()}`);
+			
 			return;
 		}
 

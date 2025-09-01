@@ -7,6 +7,7 @@
 	import { serverHost } from '$lib/host';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript';
 
 	let domain: string | undefined;
 	let filament: string | undefined;
@@ -22,7 +23,7 @@
 	let notificationsPermitted = false;
 
 	let reconnectKey: string = '';
-
+	let reconnected: boolean = false;
 	function getCookie(name: string): string | undefined {
 		const value = `; ${document.cookie}`;
 		const parts = value.split(`; ${name}=`);
@@ -33,6 +34,7 @@
 	}
 
 	onMount(() => {
+
 		const params = new URLSearchParams(location.search);
 
 		domain = params.get('domain')?.trim();
@@ -43,6 +45,15 @@
 		if (!domain || !filament || !key) {
 			if (getCookie('reconnect_key') != undefined) {
 				reconnectKey = getCookie('reconnect_key')!;
+				messages =
+					localStorage
+						.getItem('storedMessages')
+						?.split('\n')
+						.map((message) => {
+							return { user: message.split(',')[0], text: message.split(',')[1] };
+						}) || [];
+				localStorage.removeItem('storedMessages');
+				reconnected = true;
 			} else {
 				alert('missing domain, filament, or encryption key');
 
@@ -50,9 +61,7 @@
 				return;
 			}
 		}
-		document.cookie = `reconnect_key=,expires=${new Date().toUTCString()};Max-Age=0`
-		localStorage.removeItem('reconnect_key');
-
+		document.cookie = `reconnect_key=,expires=${new Date().toUTCString()};Max-Age=0`;
 		const encryptedEncryptionKey = localStorage.getItem(`${domain}/${filament}`);
 
 		if (encryptedEncryptionKey == null) {
@@ -75,15 +84,16 @@
 			location.reload();
 			return;
 		}
-		if(key)
-			encryptionKey = AES.decrypt(encryptedEncryptionKey, key).toString(crypto.enc.Utf8);
-		else if (getCookie("storedEncryptionKey") != undefined){
-			encryptionKey = getCookie("storedEncryptionKey")
-			document.cookie = `storedEncryptionKey=;expires=${new Date().toUTCString};Max-Age=0`
+
+		if (key) encryptionKey = AES.decrypt(encryptedEncryptionKey, key).toString(crypto.enc.Utf8);
+		else if (getCookie('storedEncryptionKey') != undefined) {
+			encryptionKey = getCookie('storedEncryptionKey');
+			document.cookie = `storedEncryptionKey=;expires=${new Date().toUTCString};Max-Age=0`;
 		}
+
 		if (!encryptionKey) {
 			alert('missing encryption key');
-			return
+			return;
 		}
 
 		key = undefined;
@@ -102,12 +112,12 @@
 				ws.send('ping');
 			}, 30000);
 
-			message = `<joined the chat>`;
+			message = reconnected?"<has reconnected>": `<joined the chat>`
 			send(undefined);
 			document.getElementById('message-input')?.focus();
 		};
 
-		const messagesEl = document.getElementById('messages');
+		const messageElement = document.getElementById('messages');
 		ws.onmessage = (event) => {
 			const data = event.data;
 
@@ -143,30 +153,35 @@
 			}
 
 			setTimeout(() => {
-				messagesEl?.scrollTo(0, messagesEl.scrollHeight || document.body.scrollHeight);
+				messageElement?.scrollTo(0, messageElement.scrollHeight || document.body.scrollHeight);
 			}, 0);
 		};
 
 		ws.onclose = (event) => {
 			let reason = event.reason;
-			if (!reason) {
 
+			if (!reason) {
 				const now = new Date();
 				const time = now.getTime();
 				const expireTime = time + 10800000;
 				now.setTime(expireTime);
-				document.cookie = `reconnect_key=${reconnectKey};expires=${now.toUTCString};Max-Age=10800`;
-				document.cookie = `storedEncryptionKey=${encryptionKey};expires=${now.toUTCString};Max-Age=10800`
 
-				reason = 'WebSocket connection dropped unexpectedly.';
+				document.cookie = `reconnect_key=${reconnectKey};expires=${now.toUTCString};Max-Age=10800`;
+				document.cookie = `storedEncryptionKey=${encryptionKey};expires=${now.toUTCString};Max-Age=10800`;
+
+				let messageString = messages
+					.map((message) => message.user + ',' + message.text + '\n')
+					.join('')
+					.slice(0, -1);
+
+				localStorage.setItem('storedMessages', messageString);
+			} else {
+				goto(`/?close=${reason}`);
 			}
-			// goto(`/?${params.toString()}&close=${reason}`);
 		};
 
 		notificationsPermitted = Notification.permission === 'granted';
-		window.addEventListener('beforeunload', (e) => {
-			ws.send('close');
-		});
+		
 	});
 
 	function requestNotificationPermissions() {

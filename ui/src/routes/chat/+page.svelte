@@ -24,6 +24,7 @@
 
 	let reconnectKey: string = '';
 	let reconnected: boolean = false;
+	let reloaded: boolean = false;
 	function getCookie(name: string): string | undefined {
 		const value = `; ${document.cookie}`;
 		const parts = value.split(`; ${name}=`);
@@ -46,8 +47,8 @@
 			if (getCookie('reconnect_key') != undefined) {
 				reconnectKey = getCookie('reconnect_key')!;
 				messages =
-					localStorage
-						.getItem('storedMessages')
+					AES.decrypt(localStorage
+						.getItem('storedMessages')!, reconnectKey).toString(crypto.enc.Utf8)
 						?.split('\n')
 						.map((message) => {
 							return { user: message.split(',')[0], text: message.split(',')[1] };
@@ -169,10 +170,10 @@
 				document.cookie = `reconnect_key=${reconnectKey};expires=${now.toUTCString};Max-Age=10800`;
 				document.cookie = `storedEncryptionKey=${encryptionKey};expires=${now.toUTCString};Max-Age=10800`;
 
-				let messageString = messages
+				let messageString = AES.encrypt(messages
 					.map((message) => message.user + ',' + message.text + '\n')
 					.join('')
-					.slice(0, -1);
+					.slice(0, -1), reconnectKey!).toString();
 
 				localStorage.setItem('storedMessages', messageString);
 			} else {
@@ -180,6 +181,22 @@
 			}
 		};
 
+		window.addEventListener("pagehide",(e)=>{
+				const now = new Date();
+				const time = now.getTime();
+				const expireTime = time + 10800000;
+				now.setTime(expireTime);
+
+				document.cookie = `reconnect_key=${reconnectKey};expires=${now.toUTCString};Max-Age=10800`;
+				document.cookie = `storedEncryptionKey=${encryptionKey};expires=${now.toUTCString};Max-Age=10800`;
+
+				let messageString = AES.encrypt(messages
+					.map((message) => message.user + ',' + message.text + '\n')
+					.join('')
+					.slice(0, -1), reconnectKey!).toString();
+
+				localStorage.setItem('storedMessages', messageString);
+		})
 		notificationsPermitted = Notification.permission === 'granted';
 		
 	});

@@ -9,6 +9,8 @@
 	import { browser } from '$app/environment';
 	import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript';
 
+	import { MongoClient } from "mongodb"
+
 	let domain: string | undefined;
 	let filament: string | undefined;
 	let key: string | undefined;
@@ -25,6 +27,8 @@
 	let reconnectKey: string = '';
 	let reconnected: boolean = false;
 	let reloaded: boolean = false;
+	
+
 	function getCookie(name: string): string | undefined {
 		const value = `; ${document.cookie}`;
 		const parts = value.split(`; ${name}=`);

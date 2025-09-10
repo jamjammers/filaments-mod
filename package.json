@@ -11,5 +11,8 @@
   "scripts": {
     "build": "bun build index.ts --compile --outfile filaments"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "mongodb": "^6.19.0"
+  }
 }
